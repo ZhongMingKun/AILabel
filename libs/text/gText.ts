@@ -1,14 +1,14 @@
 import _assign from 'lodash/assign';
 import _isString from 'lodash/isString';
 
-import {IObject, IPoint} from '../gInterface';
-import {ETextType} from './gEnum';
+import { IObject, IPoint } from '../gInterface';
+import { ETextType } from './gEnum';
 import CanvasLayer from '../layer/gLayerCanvas';
 import TextLayer from '../layer/gLayerText';
 import OverlayLayer from '../layer/gLayerOverlay';
 import SupportLayer from '../layer/gLayerSupport';
 import ExportHelperLayer from '../layer/gLayerExportHelper';
-import {ITextInfo, ITextStyle} from './gInterface';
+import { ITextInfo, ITextStyle } from './gInterface';
 import Graphic from '../gGraphic';
 
 export type TTextLayerType = TextLayer | OverlayLayer | SupportLayer | ExportHelperLayer;
@@ -29,7 +29,7 @@ export default class Text {
      * defaultStyle: 默认配置项
      * style: userFeatureStyle merge defaultStyle
     */
-     static defaultStyle: ITextStyle = {
+    static defaultStyle: ITextStyle = {
         opacity: 1,
         strokeStyle: '#FF0000',
         background: true, // 是否有背景色
@@ -48,8 +48,8 @@ export default class Text {
     */
     static defaultTextInfo: ITextInfo = {
         text: '',
-        position: {x: 0, y: 0}, // 文本位置
-        offset: {x: 0, y: 0} // 文本偏移量
+        position: { x: 0, y: 0 }, // 文本位置
+        offset: { x: 0, y: 0 } // 文本偏移量
     }
     public textInfo: ITextInfo
 
@@ -86,6 +86,10 @@ export default class Text {
             this.layer?.refresh();
         }
     }
+    // 更新props
+    updateProps(props: IObject) {
+        this.props = props;
+    }
 
     // 更新text位置
     updatePosition(position: IPoint) {
@@ -111,13 +115,13 @@ export default class Text {
             this.style,
             {
                 format: (info: ITextInfo) => {
-                    const {position, offset} = info;
-                    const {x: screenX, y: screenY} = this.layer.map.transformGlobalToScreen(position);
-                    const {x: offsetX, y: offsetY} = offset
+                    const { position, offset } = info;
+                    const { x: screenX, y: screenY } = this.layer.map.transformGlobalToScreen(position);
+                    const { x: offsetX, y: offsetY } = offset
                     return {
                         ...info,
-                        position: {x: screenX * dpr, y: screenY * dpr},
-                        offset: {x: offsetX * dpr, y: offsetY * dpr}
+                        position: { x: screenX * dpr, y: screenY * dpr },
+                        offset: { x: offsetX * dpr, y: offsetY * dpr }
                     };
                 }
             }
