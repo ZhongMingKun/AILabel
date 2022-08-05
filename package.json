@@ -1,6 +1,6 @@
 {
   "name": "ailabel",
-  "version": "5.1.11",
+  "version": "5.1.16-jsy",
   "description": "图像标注",
   "main": "dist/index.js",
   "browser": "dist/index.js",
