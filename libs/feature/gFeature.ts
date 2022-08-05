@@ -1,13 +1,13 @@
 import _assign from 'lodash/assign';
 
-import {IObject, IPoint} from '../gInterface';
+import { IObject, IPoint } from '../gInterface';
 import FeatureLayer from '../layer/gLayerFeature';
 import OverlayLayer from '../layer/gLayerOverlay';
 import SupportLayer from '../layer/gLayerSupport';
 import ExportHelperLayer from '../layer/gLayerExportHelper';
-import {IFeatureStyle, IRectShape, IFeatureShape} from './gInterface';
-import {EFeatureType} from './gEnum';
-import {EDirection} from '../gEnum';
+import { IFeatureStyle, IRectShape, IFeatureShape } from './gInterface';
+import { EFeatureType } from './gEnum';
+import { EDirection } from '../gEnum';
 
 export type TFeatureLayerType = FeatureLayer | OverlayLayer | SupportLayer | ExportHelperLayer;
 
@@ -71,7 +71,7 @@ export default class Feature {
 
     // 获取最小外接矩形[各子类自行实现]
     getBounds(): IRectShape {
-        return {x: 0, y: 0, width: 0, height: 0};
+        return { x: 0, y: 0, width: 0, height: 0 };
     }
 
     // 判断是否捕捉到当前对象，各子类自行实现
@@ -91,18 +91,24 @@ export default class Feature {
         }
     }
 
+    // 更新图形属性数据
+    updateProps(props: IObject) {
+        this.props = props;
+        this.layer?.refresh();
+    }
+
     // 移动feature, 各子类自行实现对应方法
-    onMove(direction: EDirection) {}
+    onMove(direction: EDirection) { }
 
     // 改变样式
     setStyle(style: IFeatureStyle, option?: IObject) {
-        const {refresh = true} = option;
+        const { refresh = true } = option;
         this.style = style;
         refresh && this.layer?.refresh();
     }
 
     // 刷新当前数据
-    refresh() {}
+    refresh() { }
 
     // 打印测试输出
     printInfo() {
