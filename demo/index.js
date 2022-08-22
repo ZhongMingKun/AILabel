@@ -8706,6 +8706,7 @@
               });
               break;
             }
+          //要改动的地方
 
           case EFeatureType.Rect:
             {
@@ -8718,6 +8719,7 @@
                   height = _ref15.height; // 说明捕捉到了feature元素
 
               var newRectShape = null;
+              var oldRectShape = shape;
 
               if (this.hoverFeature) {
                 newRectShape = {
@@ -8751,7 +8753,8 @@
               } // 保存
 
 
-              this.toUpdateShape = _objectSpread$8(_objectSpread$8({}, shape), newRectShape); // 临时层执行绘制
+              this.toUpdateShape = _objectSpread$8(_objectSpread$8({}, shape), newRectShape);
+              this.toRebuildShape = _objectSpread$8({}, oldRectShape); // 临时层执行绘制
 
               this.map.overlayLayer.addActiveFeature(activeFeature);
               this.map.overlayLayer.addRectFeature(this.toUpdateShape, {
@@ -8877,7 +8880,7 @@
             }
         }
 
-        this.map.eventsObServer.emit(EEventType.Draging, this.map.activeFeature, this.toUpdateShape);
+        this.map.eventsObServer.emit(EEventType.Draging, this.map.activeFeature, this.toUpdateShape, this.toRebuildShape);
       }
     }, {
       key: "handleActiveFeatureEnd",
@@ -8903,7 +8906,7 @@
             case EFeatureType.Rect:
             case EFeatureType.Polygon:
               {
-                this.map.eventsObServer.emit(EEventType.FeatureUpdated, activeFeature, this.toUpdateShape);
+                this.map.eventsObServer.emit(EEventType.FeatureUpdated, activeFeature, this.toUpdateShape, this.toRebuildShape);
                 break;
               }
           } // 重置还原
@@ -9219,8 +9222,26 @@
     }, {
       key: "onMouseClick",
       value: function onMouseClick(e) {
-        // 对外暴露事件执行
+        // 判断是否在绘制或者编辑拖拽过程中
+        var mapMode = this.map.mode;
+        this.clearDownTimer();
+        var drawing = this.dragging || this.tmpPointsStore.length; // 对外暴露事件执行
+
         this.map.eventsObServer.emit(EEventType.Click, this.getMouseEventPoint(e));
+
+        if (mapMode === EMapMode.Ban) {
+          // 禁用任何逻辑判断
+          return;
+        } else if (mapMode === EMapMode.Polyline && drawing) {
+          this.handlePolylineEnd(e);
+        } else if (mapMode === EMapMode.Polygon && drawing) {
+          this.handlePolygonEnd(e);
+        } // 编辑态，平移捕捉
+
+
+        if (includes_1([EMapMode.Point, EMapMode.Circle, EMapMode.Line, EMapMode.Polyline, EMapMode.Rect, EMapMode.Polygon], mapMode) && !drawing) {
+          this.handleFeatureSelect(e);
+        }
       } // onMouseDblClick: 事件绑定-双击事件
 
     }, {
@@ -14559,7 +14580,7 @@
   });
 
   var name = "ailabel";
-  var version = "5.1.11";
+  var version = "5.1.16-jsy";
   var description = "图像标注";
   var main = "dist/index.js";
   var browser = "dist/index.js";
