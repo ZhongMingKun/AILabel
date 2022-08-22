@@ -64,6 +64,8 @@ export default class EventLayer extends Layer  {
     public hoverFeatureIndex: number | undefined = undefined
     // 待更新的的feature-shape数据
     public toUpdateShape: IFeatureShape | null
+    //原有的origin-shape
+    public toRebuildShape: IFeatureShape | null
 
     // function: constructor
     constructor(id: string, props: IObject = {}, style: ILayerStyle = {}) {
@@ -839,10 +841,12 @@ export default class EventLayer extends Layer  {
                 );
                 break;
             }
+            //要改动的地方
             case EFeatureType.Rect: {
                 const {x, y, width, height} = shape as IRectShape;
                 // 说明捕捉到了feature元素
                 let newRectShape = null;
+                let oldRectShape = shape
                 if (this.hoverFeature) {
                     newRectShape = {x: x + globalDltX, y: y - globalDltY, width, height};
                 }
@@ -872,6 +876,7 @@ export default class EventLayer extends Layer  {
                 }
                 // 保存
                 this.toUpdateShape = {...shape, ...newRectShape};
+                this.toRebuildShape = { ...oldRectShape};
                 // 临时层执行绘制
                 this.map.overlayLayer.addActiveFeature(activeFeature);
                 this.map.overlayLayer.addRectFeature(
@@ -949,7 +954,7 @@ export default class EventLayer extends Layer  {
                 break;
             }
         }
-        this.map.eventsObServer.emit(EEventType.Draging, this.map.activeFeature, this.toUpdateShape)
+        this.map.eventsObServer.emit(EEventType.Draging, this.map.activeFeature, this.toUpdateShape, this.toRebuildShape)
     }
     handleActiveFeatureEnd(e: MouseEvent) {
         this.dragging = false; // 鼠标抬起
@@ -974,7 +979,8 @@ export default class EventLayer extends Layer  {
                     this.map.eventsObServer.emit(
                         EEventType.FeatureUpdated,
                         activeFeature,
-                        this.toUpdateShape
+                        this.toUpdateShape,
+                        this.toRebuildShape
                     );
                     break;
                 }
@@ -1283,11 +1289,39 @@ export default class EventLayer extends Layer  {
 
     // 单击事件
     public onMouseClick(e: MouseEvent) {
-       // 对外暴露事件执行
+        // 判断是否在绘制或者编辑拖拽过程中
+        const mapMode = this.map.mode;
+        this.clearDownTimer();
+        const drawing = this.dragging || this.tmpPointsStore.length;
+
+        // 对外暴露事件执行
         this.map.eventsObServer.emit(
             EEventType.Click,
             this.getMouseEventPoint(e)
         );
+
+        if (mapMode === EMapMode.Ban) {
+            // 禁用任何逻辑判断
+            return;
+        }
+        else if (mapMode === EMapMode.Polyline && drawing) {
+            this.handlePolylineEnd(e);
+        }
+        else if (mapMode === EMapMode.Polygon && drawing) {
+            this.handlePolygonEnd(e);
+        }
+
+        // 编辑态，平移捕捉
+        if (_includes([
+            EMapMode.Point,
+            EMapMode.Circle,
+            EMapMode.Line,
+            EMapMode.Polyline,
+            EMapMode.Rect,
+            EMapMode.Polygon
+        ], mapMode) && !drawing) {
+            this.handleFeatureSelect(e);
+        }
     }
 
     // onMouseDblClick: 事件绑定-双击事件
